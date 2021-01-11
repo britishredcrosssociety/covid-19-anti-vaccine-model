@@ -1,4 +1,4 @@
-# covid-19-vaccine-model
+# COVID-19 Anti-Vaccination Model
 
 ## Overview
 
