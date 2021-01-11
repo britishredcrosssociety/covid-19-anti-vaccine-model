@@ -1,6 +1,6 @@
 # ---- Source ----
-source("analysis/vaccines/vaccine-map-prep.R")
-source("helpers/indicator-functions.r")
+source("vaccine-map-prep.R")
+source("functions.r")
 
 # ---- Library ----
 library(viridis)
