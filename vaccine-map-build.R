@@ -33,18 +33,17 @@ all_indicators <-
   )
 
 # - England, Wales & Scotland -
-vaccine_scores_eng_wal <-
-  all_indicators %>% 
-  rename(vac_rate = vac_rate_over_65) %>% 
+vaccine_scores_eng_wal_sco <-
+  all_indicators %>%
+  rename(vac_rate = vac_rate_over_65) %>%
   filter(!str_detect(la_code, "^N")) %>%
   calc_vaccine_scores()
 
-# - Scotland & NI-
-# Missing the same indicators
-vaccine_scores_sco_ni <-
-  all_indicators %>% 
-  filter(str_detect(la_code, "^S") |
-           str_detect(la_code, "^N")) %>%
+# - NI-
+# Missing vaccination indicators flu/mmr
+vaccine_scores_ni <-
+  all_indicators %>%
+  filter(str_detect(la_code, "^N")) %>%
   calc_vaccine_scores_incomplete_indicators()
 
 
@@ -140,11 +139,11 @@ hbw_shp <- read_sf("analysis/vaccines/data/hbw/Local_Health_Boards__December_201
 #   "http://sedsh127.sedsh.gov.uk/Atom_data/ScotGov/ZippedShapefiles/SG_NHS_HealthBoards_2019.zip",
 #   write_disk(tf <- tempfile(fileext = ".zip"))
 # )
-# 
+#
 # unzip(tf, exdir = "analysis/vaccines/data/hbs")
 # unlink(tf)
 # rm(tf)
-# 
+#
 hbs_shp <- read_sf("analysis/vaccines/data/hbs-mapshaper/SG_NHS_HealthBoards_2019/SG_NHS_HealthBoards_2019.shp")
 
 # - NI -
@@ -156,7 +155,7 @@ hsct_shp <- read_sf("analysis/vaccines/data/hsct/trustboundaries/trustboundaries
 # Prep plot data
 plot_data <-
   bind_rows(
-    vaccine_scores_eng_wal %>% 
+    vaccine_scores_eng_wal %>%
       select(la_code, decile = `Vulnerability decile`),
     vaccine_scores_sco_ni %>%
       select(la_code, decile = `Vulnerability decile`)
@@ -225,12 +224,12 @@ shp_file %>%
   )
 
 # ---- Save spatial data ----
-shp_file %>% 
+shp_file %>%
   left_join(
     plot_data,
     by = "la_code"
-  ) %>% 
-  st_transform(crs = 27700) %>% 
+  ) %>%
+  st_transform(crs = 27700) %>%
   write_sf("analysis/vaccines/data/vax index.shp")
 
 # ---- Save indicators ----
@@ -244,15 +243,15 @@ write_csv(calc_scores, "analysis/vaccines/data/vax index scores.csv")
 # ---- List worst ten LAs ----
 la <- read_csv("https://opendata.arcgis.com/datasets/35de30c6778b463a8305939216656132_0.csv")
 
-la <- la %>% 
+la <- la %>%
   left_join(calc_scores, by = c("LAD19CD" = "la_code"))
 
-la_list <- la %>% 
-  mutate(Country = str_sub(LAD19CD, 1, 1)) %>% 
-  
-  group_by(Country) %>% 
-  filter(`Vulnerability rank` > max(`Vulnerability rank`) - 10) %>% 
+la_list <- la %>%
+  mutate(Country = str_sub(LAD19CD, 1, 1)) %>%
 
-  arrange(Country, desc(`Vulnerability rank`)) %>% 
+  group_by(Country) %>%
+  filter(`Vulnerability rank` > max(`Vulnerability rank`) - 10) %>%
+
+  arrange(Country, desc(`Vulnerability rank`)) %>%
   select(Country, LAD19NM, `Vulnerability rank`, `Vulnerability decile`)
 
